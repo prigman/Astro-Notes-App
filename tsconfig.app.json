@@ -27,7 +27,7 @@
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
-    "allowJs": false
+    "allowJs": false,
   },
   "files": [],
   "include": ["src/**/*.ts", "src/**/*.tsx"]

@@ -16,6 +16,11 @@ main {
 	height: 100%;
 }
 
+.loading {
+	color: white;
+	font-weight: bold;
+}
+
 .bg {
 	z-index: -1;
 	position: fixed;
@@ -60,6 +65,7 @@ main {
 			font-size: 3em;
 			font-weight: bold;
 			margin-bottom: 1em;
+			
 		}
 
 		.category-btn-all {
@@ -110,6 +116,7 @@ main {
 					.title {
 						font-weight: bold;
 						font-size: 2em;
+						word-break: break-word;
 					}
 
 					.text {

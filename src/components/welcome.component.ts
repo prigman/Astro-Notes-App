@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -33,7 +33,12 @@ import { FormsModule } from '@angular/forms';
 				</section>
 				<section class="notes">
 					<div class="list">
-						<div class="item" *ngFor="let note of getNotes(notesSortByColor)">
+
+						<div *ngIf="isLoading" class="loading">Loading...</div>
+
+						<button (click)="fetchNotes()" *ngIf=" !isLoading && !notesLocalList.length && !fetchedNotesList.length" type="button">Fetch fake notes</button>
+
+						<div class="item" *ngFor="let note of (notesLocalList.length ? getNotes(notesSortColor) : [])">
 							<div class="item-back" [ngClass]="note.color"></div>
 							<div class="item-bg">
 								<div class="body">
@@ -41,12 +46,29 @@ import { FormsModule } from '@angular/forms';
 									<div class="text">{{ note.text }}</div>
 								</div>
 								<div class="footer">
-									<div (click)="removeNote(note)" class="remove">Remove</div>
+									<div (click)="removeNote(note, notesLocalList)" class="remove">Remove</div>
 									<div class="date">{{ note.updatedLocal }}</div>
 								</div>
 							</div>
 						</div>
+						
+						<div class="item" *ngFor="let noteFetched of (fetchedNotesList.length ? getFetchedNotes(notesSortColor) : [])">
+							<div class="item-back" [ngClass]="noteFetched.color"></div>
+							<div class="item-bg">
+								<div class="body">
+									<div class="title">{{ noteFetched.title }}</div>
+									<div class="text">{{ noteFetched.text }}</div>
+								</div>
+								<div class="footer">
+									<div (click)="removeNote(noteFetched, fetchedNotesList)" class="remove">Remove</div>
+									<div class="date">{{ noteFetched.updatedLocal }}</div>
+								</div>
+							</div>
+						</div>
+
 					</div>
+
+					
 				</section>
 			</div>
 		</main>
@@ -56,42 +78,59 @@ import { FormsModule } from '@angular/forms';
 
 export class NotesAppComponent {
 
-	noteTitle: string = "";
-	noteText: string = "";
+	noteTitle: string;
+	
+	noteText: string;
 
-	localStorageKey: string = 'astronotesapp-notes';
+	localStorageKey: string;
 
-	notesSortByColor : string = "";
+	notesSortColor : string;
 
-	notesList: Note[] = [];
+	isLoading: boolean;
+
+	notesLocalList: Note[];
+
+	fetchedNotesList: Note[];
+
+	allColors: string[];
+
+	constructor(private cdr : ChangeDetectorRef) {
+		this.allColors = ['first-color', 'second-color', 'third-color'];
+		this.isLoading = false;
+		this.noteTitle = "";
+		this.noteText = "";
+		this.notesSortColor = "";
+		this.notesLocalList = [];
+		this.fetchedNotesList = [];
+		this.localStorageKey = "astronotesapp-notes";
+	}
 
 	ngOnInit(): void {
-		this.notesList = this.getNotes(this.notesSortByColor)
+		this.notesLocalList = this.getNotes(this.notesSortColor);
+	}
+
+	getFetchedNotes(sortColor: string): Note[] {
+		return this.getNotesByColor(sortColor, this.fetchedNotesList);
 	}
 
 	getNotes(sortColor: string): Note[] {
 		if (typeof localStorage === 'undefined') {
 			return [];
 		}
-		const notesList: Note[] = JSON.parse(localStorage.getItem(this.localStorageKey) || '[]');
-		switch(sortColor)
-		{
-			case "":
-				return this.sortNotesByDate(notesList);
-			default:
-				return this.sortNotesByDate(notesList).filter((value: Note) => value.color === sortColor);
-		}
+		const listOfNotes = JSON.parse(localStorage.getItem(this.localStorageKey) || '[]');
+		return this.getNotesByColor(sortColor, listOfNotes);
 	}
 
-	saveNote(noteToSave: Note): void {
-		if (typeof localStorage === 'undefined' || noteToSave.title === '' || noteToSave.text === '') {
+	saveNote(noteToSave: Note, listOfNotes : Note[]): void {
+		if (noteToSave.title === '' || noteToSave.text === '') {
 			return;
 		}
 		noteToSave.id = Math.floor(Math.random() * 1000000);
 		noteToSave.updatedISO = new Date().toISOString();
-		noteToSave.updatedLocal = new Date(noteToSave.updatedISO).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short"});
-		this.notesList.push(noteToSave);
-		this.updateLocalStorage();
+		noteToSave.updatedLocal = this.convertToLocalDate(noteToSave.updatedISO);
+		listOfNotes.push(noteToSave);
+		if(listOfNotes === this.notesLocalList && typeof localStorage !== 'undefined') 
+			this.updateLocalStorage();
 	}
 
 	addNewNote(noteColor: string): void {
@@ -99,32 +138,78 @@ export class NotesAppComponent {
 			title: this.noteTitle,
 			text: this.noteText,
 			color: noteColor
-		});
+		}, this.notesLocalList);
 		this.noteTitle = '';
 		this.noteText = '';
 	}
 
-	removeNote(note : Note): void {
-		const index: number = this.notesList.findIndex(value => value.id === note.id);
+	removeNote(note : Note, listOfNotes: Note[]): void {
+		const index: number = listOfNotes.findIndex(value => value.id === note.id);
 		if (index > -1) {
-			this.notesList.splice(index, 1);
+			listOfNotes.splice(index, 1);
 		}
-		this.updateLocalStorage();
+		if(listOfNotes === this.notesLocalList)
+			this.updateLocalStorage();
+		else
+			this.cdr.detectChanges();
 	}
 
-	sortNotesByDate(notesList: Note[]): Note[] {
-		return notesList.sort((a, b) => {
+	sortNotesByDate(note: Note[]): Note[] {
+		return note.sort((a, b) => {
 			return new Date(a.updatedISO || 0) > new Date(b.updatedISO || 0) ? -1 : 1;
 		})
 	}
 
 	setNotesColor(sortColor: string): void {
-		this.notesSortByColor = sortColor;
+		this.notesSortColor = sortColor;
+	}
+
+	getNotesByColor(sortColor: string, listOfNotes: Note[]): Note[] {
+		switch(sortColor)
+		{
+			case "":
+				return this.sortNotesByDate(listOfNotes);
+			default:
+				return this.sortNotesByDate(listOfNotes).filter((value: Note) => value.color === sortColor);
+		}
 	}
 
 	updateLocalStorage(): void {
-		localStorage.setItem(this.localStorageKey, JSON.stringify(this.notesList));
+		localStorage.setItem(this.localStorageKey, JSON.stringify(this.notesLocalList));
 	}
+
+	convertToLocalDate(ISOdate: string): string {
+		return new Date(ISOdate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short"})
+	}
+
+	getRandomColor(): string {
+		const index = Math.floor(Math.random() * this.allColors.length);
+		return this.allColors[index];
+	}
+
+	async fetchNotes(): Promise<void> {
+		this.isLoading = true;
+		try {
+			const response: Response = await fetch('https://jsonplaceholder.typicode.com/posts');
+			const data: any = await response.json();
+			data.splice(data.length / 2, data.length);
+			data.forEach((item: any) => {
+				this.saveNote({
+					title: item.title,
+					text: item.body,
+					color: this.getRandomColor()
+				}, this.fetchedNotesList);
+			});
+		}
+		catch(error) {
+			console.log(error);
+		}
+		finally {
+			this.isLoading = false;
+			this.cdr.detectChanges();
+		}
+	}
+
 }
 
 export interface Note {

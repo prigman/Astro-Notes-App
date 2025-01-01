@@ -1,0 +1,194 @@
+@use "../_variables.scss" as vars;
+
+.first-color {
+	background-color: vars.$firstColor;
+}
+.second-color {
+	background-color: vars.$secondColor;
+}
+.third-color {
+	background-color: vars.$thirdColor;
+}
+
+#container,
+main {
+	width: 100%;
+	height: 100%;
+}
+
+.bg {
+	z-index: -1;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background-image: linear-gradient(to right top,
+			#00058c,
+			#210597,
+			#3405a2,
+			#4604ac,
+			#5603b7,
+			#6402bf,
+			#7101c6,
+			#7e00ce,
+			#8c00d4,
+			#9a00da,
+			#a800e0,
+			#b600e6);
+}
+
+.app {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	height: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	.category-btn {
+		margin: 1em;
+		font-size: 1em;
+		width: 3em;
+		height: 3em;
+	}
+
+	.category-list {
+		margin-bottom: 4em;
+
+		.title {
+			text-align: center;
+			color: white;
+			font-size: 3em;
+			font-weight: bold;
+			margin-bottom: 1em;
+		}
+
+		.category-btn-all {
+			margin: 1em;
+		}
+
+		.select {
+			display: flex;
+			cursor: pointer;
+		}
+	}
+
+	.notes {
+		max-width: vars.$noteSize * vars.$notesInRow + vars.$noteMargin * 6;
+
+		.list {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: flex-start;
+			justify-content: center;
+
+			.item {
+				position: relative;
+				width: vars.$noteSize;
+				min-height: vars.$noteSize;
+				margin: vars.$noteMargin;
+				cursor: pointer;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+
+				.item-bg {
+					padding: vars.$notePadding;
+					display: flex;
+					flex-direction: column;
+					justify-content: space-between;
+					background-color: hsl(0, 0%, 95%);
+					z-index: 1;
+					border-radius: 2em;
+					width: vars.$noteSize;
+					min-height: vars.$noteSize;
+				}
+
+				.body {
+					display: flex;
+					flex-direction: column;
+
+					.title {
+						font-weight: bold;
+						font-size: 2em;
+					}
+
+					.text {
+						padding: 1em 0;
+						font-size: 1em;
+						word-break: break-word;
+					}
+				}
+
+				.footer {
+					width: 100%;
+					display: flex;
+					justify-content: space-between;
+					text-align: end;
+					color: #aaaaaa;
+					font-style: italic;
+					.remove {
+						color: red;
+					}
+				}
+			}
+
+			.item-back {
+				position: absolute;
+				width: vars.$noteSize + vars.$notePadding * 2;
+				height: vars.$noteSize;
+				border-radius: 2em;
+				top: -20px;
+			}
+		}
+	}
+
+	.preview {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin: 5em 0;
+
+		.choose {
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
+
+			.choose-btn {
+				font-size: 1.5em;
+				width: 5em;
+				color: white;
+				margin: 0.5em;
+			}
+		}
+
+		.title,
+		.text {
+			border: none;
+			outline: none;
+			width: 100%;
+			text-align: center;
+			background: none;
+			color: white;
+			font-family: "Montserrat", sans-serif;
+		}
+
+		.title::placeholder,
+		.text::placeholder {
+			color: white;
+			opacity: 1;
+		}
+
+		.title {
+			font-size: 3em;
+			font-weight: bold;
+		}
+
+		.text {
+			font-size: 1.2em;
+			line-height: 1.5;
+			margin: 2em 0;
+			resize: none;
+			min-height: 150px;
+		}
+	}
+}

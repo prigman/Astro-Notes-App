@@ -107,6 +107,9 @@ export class NotesAppComponent {
 
 	ngOnInit(): void {
 		this.notesLocalList = this.getNotes(this.notesSortColor);
+		if (typeof document !== "undefined") {
+			document.querySelectorAll("link[rel='stylesheet']").forEach((el) => el.remove());
+		}
 	}
 
 	getFetchedNotes(sortColor: string): Note[] {
